@@ -1,0 +1,8 @@
+{
+  "rpcUrl": "https://bitcoin-mainnet.public.blastapi.io",
+  "nodeType": "btc",
+  "interval": 10000,
+  "maxLagTime": 3600,
+  "metricsPort": 9090,
+  "healthCheckPort": 8080
+}

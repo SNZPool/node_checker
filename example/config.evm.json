@@ -1,0 +1,8 @@
+{
+  "rpcUrl": "https://eth-mainnet.public.blastapi.io",
+  "nodeType": "evm",
+  "interval": 10000,
+  "maxLagTime": 60,
+  "metricsPort": 9090,
+  "healthCheckPort": 8080
+}

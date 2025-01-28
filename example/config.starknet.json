@@ -1,0 +1,8 @@
+{
+  "rpcUrl": "https://starknet-mainnet.public.blastapi.io",
+  "nodeType": "starknet",
+  "interval": 10000,
+  "maxLagTime": 90,
+  "metricsPort": 9090,
+  "healthCheckPort": 8080
+}
