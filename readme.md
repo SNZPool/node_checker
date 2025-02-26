@@ -38,8 +38,8 @@ Create a `config.json` file in the root directory (use the provided `config.exam
   "nodeType": "evm",
   "interval": 5000,
   "maxLagTime": 60,
-  "metricsPort": 9090,
-  "healthCheckPort": 8080
+  "metricsPort": 8080,
+  "healthCheckPort": 9090
 }
 ```
 
