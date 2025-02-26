@@ -21,8 +21,12 @@ async function checkEvmNodeStatus(config) {
       params: ['finalized', false],
       id: 1,
     });
-
-    const finalizedHeight = parseInt(finalizedBlockResponse.data.result.number, 16);
+    
+    if (finalizedBlockResponse.data.result && finalizedBlockResponse.data.result.number) {
+      finalizedHeight = parseInt(finalizedBlockResponse.data.result.number, 16);
+    } else {
+      finalizedHeight = latestHeight;
+    }
     metrics.finalizedHeight.set(finalizedHeight);
 
     // Fetch the Latest Block timestamp to compare with system time
