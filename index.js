@@ -42,7 +42,7 @@ switch (config.nodeType) {
     process.exit(1);
 }
 startMetricsServer(metricsPort);
-startHealthCheckServer(healthCheckPort, () => nodeHealthy);
+startHealthCheckServer(healthCheckPort, () => nodeHealthy, config.healthCheckPath);
 const nodeStatusInterval = setInterval(nodeStatusChecker, nodeCheckInterval);
 
 //

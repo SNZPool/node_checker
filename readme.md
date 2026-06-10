@@ -50,6 +50,7 @@ Create a `config.json` file in the root directory (use the provided `config.exam
 - **maxLagTime**: Maximum allowed time lag before marking the node as unhealthy.
 - **metricsPort**: Port to expose Prometheus metrics.
 - **healthCheckPort**: Port for the health check endpoint.
+- **healthCheckPath** (optional): Path for the health check endpoint. Defaults to `/` (root). The legacy path `/health` is also supported when using the default.
 
 ## Usage
 
@@ -71,7 +72,7 @@ Create a `config.json` file in the root directory (use the provided `config.exam
    Visit `http://localhost:<metricsPort>/metrics`.
 
 5. Use the health check endpoint:
-   Send a request to `http://localhost:<healthCheckPort>/health`.
+   Send a request to `http://localhost:<healthCheckPort>/` (or `http://localhost:<healthCheckPort>/health` for backward compatibility).
 
 ## Metrics
 The tool exposes the following metrics for Prometheus:
@@ -81,6 +82,8 @@ The tool exposes the following metrics for Prometheus:
 - `node_status`: Node health status (1 for healthy, 0 for unhealthy).
 
 ## Health Check
+The health check server listens on `healthCheckPort`. By default, probe the root path `/`; no subpath configuration is required. You can optionally set `healthCheckPath` in the config to use a custom path (e.g. `/health`).
+
 The health check endpoint returns:
 - **200 OK** if the node is healthy.
 - **503 Service Unavailable** if the node is unhealthy.
