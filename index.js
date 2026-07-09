@@ -2,7 +2,13 @@ const logger = require('./src/logger');
 const { startMetricsServer } = require('./src/metrics');
 const { startHealthCheckServer } = require('./src/healthCheck');
 const { loadConfig } = require('./src/config');
-const { checkEvmNodeStatus, checkStarknetNodeStatus, checkBtcNodeStatus } = require('./src/check.js');  // 引入新模块
+const {
+  checkEvmNodeStatus,
+  checkStarknetNodeStatus,
+  checkBtcNodeStatus,
+  checkAptosNodeStatus,
+  checkSolanaNodeStatus,
+} = require('./src/check.js');
 
 //
 const configPath = process.argv[2]?.split('=')[1] || 'config.json';
@@ -19,28 +25,24 @@ const metricsPort = process.env.METRICS_PORT || config.metricsPort;
 const healthCheckPort = process.env.HEALTH_PORT || config.healthCheckPort;
 const nodeCheckInterval = config.interval || 10000;
 
-let nodeHealthy = false;
-let nodeStatusChecker;
-switch (config.nodeType) {
-  case "evm":
-    nodeStatusChecker = async () => {
-      nodeHealthy = await checkEvmNodeStatus(config);
-    };
-    break;
-  case "starknet":
-    nodeStatusChecker = async () => {
-      nodeHealthy = await checkStarknetNodeStatus(config);
-    };
-    break;
-  case "btc":
-    nodeStatusChecker = async () => {
-      nodeHealthy = await checkBtcNodeStatus(config);
-    };
-    break;
-  default:
-    logger.error(`${config.nodeType} is not supported`);
-    process.exit(1);
+const checkerRegistry = {
+  evm: checkEvmNodeStatus,
+  starknet: checkStarknetNodeStatus,
+  btc: checkBtcNodeStatus,
+  aptos: checkAptosNodeStatus,
+  solana: checkSolanaNodeStatus,
+};
+
+const checker = checkerRegistry[config.nodeType];
+if (!checker) {
+  logger.error(`${config.nodeType} is not supported`);
+  process.exit(1);
 }
+
+let nodeHealthy = false;
+const nodeStatusChecker = async () => {
+  nodeHealthy = await checker(config);
+};
 startMetricsServer(metricsPort);
 startHealthCheckServer(healthCheckPort, () => nodeHealthy, config.healthCheckPath);
 const nodeStatusInterval = setInterval(nodeStatusChecker, nodeCheckInterval);

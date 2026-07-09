@@ -45,12 +45,22 @@ Create a `config.json` file in the root directory (use the provided `config.exam
 
 ### Configuration Options
 - **rpcUrl**: The RPC URL of the blockchain node.
-- **nodeType**: The type of the blockchain node: `evm`, `starknet` and `btc`.
+- **nodeType**: The type of the blockchain node: `evm`, `starknet`, `btc`, `aptos`, and `solana`.
 - **interval**: This interval(ms) determines how often the tool checks the node's synchronization status.
 - **maxLagTime**: Maximum allowed time lag before marking the node as unhealthy.
 - **metricsPort**: Port to expose Prometheus metrics.
 - **healthCheckPort**: Port for the health check endpoint.
 - **healthCheckPath** (optional): Path for the health check endpoint. Defaults to `/` (root). The legacy path `/health` is also supported when using the default.
+
+### Node Type Notes
+
+| `nodeType` | RPC style | Recommended `maxLagTime` | Notes |
+|------------|-----------|--------------------------|-------|
+| `evm` | JSON-RPC 2.0 | 60s | Ethereum-compatible chains |
+| `starknet` | JSON-RPC 2.0 | 90s | |
+| `btc` | JSON-RPC 1.0 | 3600s | Longer tolerance for Bitcoin block times |
+| `aptos` | REST (`GET /v1`) | 30–60s | `rpcUrl` may be written with or without `/v1` suffix |
+| `solana` | JSON-RPC 2.0 | 60–120s | Uses `getSlot` + `getBlockTime` for block time lag |
 
 ## Usage
 

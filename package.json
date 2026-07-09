@@ -1,12 +1,14 @@
 {
   "name": "node_checker",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Blockchain Node Checker is a lightweight and robust tool built with Node.js to monitor the synchronization status and health of blockchain nodes. It is designed to provide crucial metrics for monitoring and facilitate health checks for load balancers. The tool is highly configurable, resilient to network fluctuations, and integrates seamlessly with Prometheus for monitoring.",
   "main": "index.js",
   "scripts": {
     "evm": "node index.js --config=example/config.evm.json",
     "starknet": "node index.js --config=example/config.starknet.json",
-    "btc": "node index.js --config=example/config.btc.json"
+    "btc": "node index.js --config=example/config.btc.json",
+    "aptos": "node index.js --config=example/config.aptos.json",
+    "solana": "node index.js --config=example/config.solana.json"
   },
   "author": "",
   "license": "ISC",

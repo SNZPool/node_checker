@@ -158,8 +158,101 @@ async function checkBtcNodeStatus(config) {
   }
 }
 
+function normalizeAptosBaseUrl(rpcUrl) {
+  return rpcUrl.replace(/\/+$/, '').replace(/\/v1$/, '');
+}
+
+async function checkAptosNodeStatus(config) {
+  try {
+    const ledgerInfoUrl = `${normalizeAptosBaseUrl(config.rpcUrl)}/v1`;
+    const ledgerInfoResponse = await axios.get(ledgerInfoUrl);
+
+    const latestHeight = parseInt(ledgerInfoResponse.data.block_height, 10);
+    metrics.latestHeight.set(latestHeight);
+    metrics.finalizedHeight.set(latestHeight);
+
+    const latestTimestamp = Math.floor(
+      parseInt(ledgerInfoResponse.data.ledger_timestamp, 10) / 1_000_000
+    );
+    const currentTime = Math.floor(Date.now() / 1000);
+    const blockTimeLag = currentTime - latestTimestamp;
+    metrics.blockTimeLag.set(blockTimeLag);
+
+    if (blockTimeLag > config.maxLagTime) {
+      logger.warn(`Node is lagging: ${blockTimeLag} seconds behind`);
+      metrics.status.set(0);
+      return false;
+    }
+
+    logger.info('Node is healthy');
+    metrics.status.set(1);
+    return true;
+  } catch (error) {
+    logger.error(`Error checking Aptos node status: ${error.message}`);
+    metrics.status.set(0);
+    return false;
+  }
+}
+
+async function solanaRpc(config, method, params = []) {
+  const response = await axios.post(config.rpcUrl, {
+    jsonrpc: '2.0',
+    method,
+    params,
+    id: 1,
+  });
+
+  if (response.data.error) {
+    throw new Error(response.data.error.message || JSON.stringify(response.data.error));
+  }
+
+  return response.data.result;
+}
+
+async function checkSolanaNodeStatus(config) {
+  try {
+    const latestHeight = await solanaRpc(config, 'getSlot', [{ commitment: 'confirmed' }]);
+    metrics.latestHeight.set(latestHeight);
+
+    let finalizedHeight = latestHeight;
+    try {
+      finalizedHeight = await solanaRpc(config, 'getSlot', [{ commitment: 'finalized' }]);
+    } catch (error) {
+      logger.warn(`Unable to fetch finalized slot, using latest slot: ${error.message}`);
+    }
+    metrics.finalizedHeight.set(finalizedHeight);
+
+    const blockTime = await solanaRpc(config, 'getBlockTime', [latestHeight]);
+    if (blockTime === null || blockTime === undefined) {
+      logger.warn('Latest slot block time is unavailable');
+      metrics.status.set(0);
+      return false;
+    }
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    const blockTimeLag = currentTime - blockTime;
+    metrics.blockTimeLag.set(blockTimeLag);
+
+    if (blockTimeLag > config.maxLagTime) {
+      logger.warn(`Node is lagging: ${blockTimeLag} seconds behind`);
+      metrics.status.set(0);
+      return false;
+    }
+
+    logger.info('Node is healthy');
+    metrics.status.set(1);
+    return true;
+  } catch (error) {
+    logger.error(`Error checking Solana node status: ${error.message}`);
+    metrics.status.set(0);
+    return false;
+  }
+}
+
 module.exports = {
   checkEvmNodeStatus,
   checkStarknetNodeStatus,
   checkBtcNodeStatus,
+  checkAptosNodeStatus,
+  checkSolanaNodeStatus,
 };
