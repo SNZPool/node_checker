@@ -9,7 +9,7 @@ const {
   checkAptosNodeStatus,
   checkSolanaNodeStatus,
 } = require('./src/check.js');
-const { getPeerCountChecker } = require('./src/peers');
+const { getPeerCountCheckers } = require('./src/peers');
 
 //
 const configPath = process.argv[2]?.split('=')[1] || 'config.json';
@@ -48,21 +48,15 @@ startMetricsServer(metricsPort);
 startHealthCheckServer(healthCheckPort, () => nodeHealthy, config.healthCheckPath);
 const nodeStatusInterval = setInterval(nodeStatusChecker, nodeCheckInterval);
 
-// Peer count runs independently and never touches nodeHealthy.
-const peerCountChecker = getPeerCountChecker(config);
-const peerCountInterval = peerCountChecker
-  ? setInterval(() => peerCountChecker().catch(() => {}), nodeCheckInterval)
-  : null;
-if (!peerCountChecker) {
-  logger.info(`Peer count is not supported for ${config.nodeType}, skipping`);
-}
+// Peer counts run independently and never touch nodeHealthy.
+const peerCountIntervals = getPeerCountCheckers(config).map((peerCountChecker) =>
+  setInterval(() => peerCountChecker().catch(() => {}), nodeCheckInterval)
+);
 
 //
 process.on('SIGINT', () => {
   clearInterval(nodeStatusInterval);
-  if (peerCountInterval) {
-    clearInterval(peerCountInterval);
-  }
+  peerCountIntervals.forEach(clearInterval);
   logger.info('Node status check stopped.');
   process.exit();
 });
