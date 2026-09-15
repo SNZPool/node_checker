@@ -51,6 +51,7 @@ Create a `config.json` file in the root directory (use the provided `config.exam
 - **metricsPort**: Port to expose Prometheus metrics.
 - **healthCheckPort**: Port for the health check endpoint.
 - **healthCheckPath** (optional): Path for the health check endpoint. Defaults to `/` (root). The legacy path `/health` is also supported when using the default.
+- **opNodeRpcUrl** (optional): RPC URL of the OP Stack `op-node` (e.g. `http://127.0.0.1:9545`). When set, its libp2p peer count is exported as `op_node_peer_count`.
 
 ### Node Type Notes
 
@@ -90,6 +91,8 @@ The tool exposes the following metrics for Prometheus:
 - `node_finalized_height`: Finalized block height of the node.
 - `node_block_time_lag`: Time difference between the latest block timestamp and the system time (in seconds).
 - `node_status`: Node health status (1 for healthy, 0 for unhealthy).
+- `node_peer_count`: Number of peers connected to the node, or `-1` if the query failed or has not completed yet. Supported for `evm` (`net_peerCount`) and `btc` (`getconnectioncount`). A failed peer query never affects `node_status` or the health check.
+- `op_node_peer_count`: Number of libp2p peers connected to `op-node` (via `opp2p_peerStats`), or `-1` if the query failed. Only exported when `opNodeRpcUrl` is configured. On OP Stack chains this is usually more meaningful than `node_peer_count`, since the execution client may run with P2P disabled.
 
 ## Health Check
 The health check server listens on `healthCheckPort`. By default, probe the root path `/`; no subpath configuration is required. You can optionally set `healthCheckPath` in the config to use a custom path (e.g. `/health`).
