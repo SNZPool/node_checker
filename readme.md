@@ -90,6 +90,7 @@ The tool exposes the following metrics for Prometheus:
 - `node_finalized_height`: Finalized block height of the node.
 - `node_block_time_lag`: Time difference between the latest block timestamp and the system time (in seconds).
 - `node_status`: Node health status (1 for healthy, 0 for unhealthy).
+- `node_peer_count`: Number of peers connected to the node, or `-1` if the query failed or has not completed yet. Supported for `evm` (`net_peerCount`) and `btc` (`getconnectioncount`). A failed peer query never affects `node_status` or the health check.
 
 ## Health Check
 The health check server listens on `healthCheckPort`. By default, probe the root path `/`; no subpath configuration is required. You can optionally set `healthCheckPath` in the config to use a custom path (e.g. `/health`).

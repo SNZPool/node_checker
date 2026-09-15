@@ -24,6 +24,11 @@ const metrics = {
     name: 'node_status',
     help: 'Node health status (1 for healthy, 0 for unhealthy)',
     registers: [register]
+  }),
+  peerCount: new client.Gauge({
+    name: 'node_peer_count',
+    help: 'Number of peers connected to the node (-1 if the query failed)',
+    registers: [register]
   })
 };
 
