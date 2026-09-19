@@ -211,18 +211,22 @@ async function solanaRpc(config, method, params = []) {
 
 async function checkSolanaNodeStatus(config) {
   try {
-    const latestHeight = await solanaRpc(config, 'getSlot', [{ commitment: 'confirmed' }]);
+    // Report block height (not slot) so the value is comparable to other tools and explorers;
+    // slot numbers run ~5% ahead of block height because of skipped slots.
+    const latestHeight = await solanaRpc(config, 'getBlockHeight', [{ commitment: 'confirmed' }]);
     metrics.latestHeight.set(latestHeight);
 
     let finalizedHeight = latestHeight;
     try {
-      finalizedHeight = await solanaRpc(config, 'getSlot', [{ commitment: 'finalized' }]);
+      finalizedHeight = await solanaRpc(config, 'getBlockHeight', [{ commitment: 'finalized' }]);
     } catch (error) {
-      logger.warn(`Unable to fetch finalized slot, using latest slot: ${error.message}`);
+      logger.warn(`Unable to fetch finalized block height, using latest: ${error.message}`);
     }
     metrics.finalizedHeight.set(finalizedHeight);
 
-    const blockTime = await solanaRpc(config, 'getBlockTime', [latestHeight]);
+    // getBlockTime is keyed by slot, not block height.
+    const latestSlot = await solanaRpc(config, 'getSlot', [{ commitment: 'confirmed' }]);
+    const blockTime = await solanaRpc(config, 'getBlockTime', [latestSlot]);
     if (blockTime === null || blockTime === undefined) {
       logger.warn('Latest slot block time is unavailable');
       metrics.status.set(0);
