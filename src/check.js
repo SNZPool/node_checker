@@ -209,6 +209,39 @@ async function solanaRpc(config, method, params = []) {
   return response.data.result;
 }
 
+// Solana block time is read from the Clock sysvar rather than getBlockTime. Alpenglow
+// (mainnet 2026-10-21) made confirmed and finalized the same commitment, so getSlot now always
+// returns an already-rooted slot, which sends getBlockTime down agave's rooted path. That path
+// answers from the blockstore block-time cache, and a node started without
+// --enable-rpc-transaction-history has nothing cached, so every call comes back null. The Clock
+// sysvar is served straight from the bank and needs no transaction history.
+const SOLANA_CLOCK_SYSVAR = 'SysvarC1ock11111111111111111111111111111111';
+// Clock layout: slot, epoch_start_timestamp, epoch, leader_schedule_epoch, then unix_timestamp.
+const SOLANA_CLOCK_TIMESTAMP_OFFSET = 32;
+
+async function fetchSolanaChainTime(config) {
+  const account = await solanaRpc(config, 'getAccountInfo', [
+    SOLANA_CLOCK_SYSVAR,
+    {
+      encoding: 'base64',
+      commitment: 'confirmed',
+      dataSlice: { offset: SOLANA_CLOCK_TIMESTAMP_OFFSET, length: 8 },
+    },
+  ]);
+
+  const encoded = account && account.value && account.value.data && account.value.data[0];
+  if (!encoded) {
+    throw new Error('Clock sysvar is unavailable');
+  }
+
+  const raw = Buffer.from(encoded, 'base64');
+  if (raw.length !== 8) {
+    throw new Error(`Unexpected Clock sysvar slice length: ${raw.length}`);
+  }
+
+  return Number(raw.readBigInt64LE(0));
+}
+
 async function checkSolanaNodeStatus(config) {
   try {
     // Report block height (not slot) so the value is comparable to other tools and explorers;
@@ -224,14 +257,7 @@ async function checkSolanaNodeStatus(config) {
     }
     metrics.finalizedHeight.set(finalizedHeight);
 
-    // getBlockTime is keyed by slot, not block height.
-    const latestSlot = await solanaRpc(config, 'getSlot', [{ commitment: 'confirmed' }]);
-    const blockTime = await solanaRpc(config, 'getBlockTime', [latestSlot]);
-    if (blockTime === null || blockTime === undefined) {
-      logger.warn('Latest slot block time is unavailable');
-      metrics.status.set(0);
-      return false;
-    }
+    const blockTime = await fetchSolanaChainTime(config);
 
     const currentTime = Math.floor(Date.now() / 1000);
     const blockTimeLag = currentTime - blockTime;
