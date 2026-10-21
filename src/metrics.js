@@ -24,6 +24,17 @@ const metrics = {
     name: 'node_status',
     help: 'Node health status (1 for healthy, 0 for unhealthy)',
     registers: [register]
+  }),
+  peerCount: new client.Gauge({
+    name: 'node_peer_count',
+    help: 'Number of peers connected to the node (-1 if the query failed)',
+    registers: [register]
+  }),
+  opNodePeerCount: new client.Gauge({
+    name: 'op_node_peer_count',
+    help: 'Number of libp2p peers connected to op-node (-1 if the query failed)',
+    // Registered only when opNodeRpcUrl is configured, see peers.js.
+    registers: []
   })
 };
 
@@ -40,4 +51,4 @@ function startMetricsServer(port) {
   });
 }
 
-module.exports = { metrics, startMetricsServer };
+module.exports = { metrics, register, startMetricsServer };
