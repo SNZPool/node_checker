@@ -61,7 +61,7 @@ Create a `config.json` file in the root directory (use the provided `config.exam
 | `starknet` | JSON-RPC 2.0 | 90s | |
 | `btc` | JSON-RPC 1.0 | 3600s | Longer tolerance for Bitcoin block times |
 | `aptos` | REST (`GET /v1`) | 30–60s | `rpcUrl` may be written with or without `/v1` suffix |
-| `solana` | JSON-RPC 2.0 | 60–120s | Height from `getBlockHeight`; block time lag from `getSlot` + `getBlockTime` |
+| `solana` | JSON-RPC 2.0 | 60–120s | Height from `getBlockHeight`; block time lag from the Clock sysvar (no `--enable-rpc-transaction-history` needed) |
 
 ## Usage
 
